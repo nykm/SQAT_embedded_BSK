@@ -28,6 +28,10 @@
 #include "i2c.h"
 // TODO: add include for "display.h"
 #include "display.h"
+// TODO: add include for "random.h"
+#include "random.h"
+// TODO: add include for "romapi.h"
+#include "romapi.h"
 
 #define SWM_MODE_I2C 1
 #define SWM_MODE_LED 2
@@ -40,7 +44,7 @@
 #define I2C_DEMO_MODE_DECIMAL 2
 #define I2C_DEMO_MODE_HEX     3
 
-#define I2C_DEMO_MODE 3
+#define I2C_DEMO_MODE 2
 #endif
 
 int main(void)
@@ -54,6 +58,12 @@ int main(void)
 #if (SWM_MODE==SWM_MODE_I2C)
     swm_config_i2c();
     i2c_reset();
+    unsigned int romid[4];
+    if ( 0==romapi_read_id( romid,4 ) ){
+    	random_init(romid[0],romid[1],romid[2],romid[3]);
+    } else {
+    	random_init(12345,12345,12345,12345);
+    }
 #elif (SWM_MODE==SWM_MODE_LED)
 	swm_config_LED();
 	// TODO: add call to led_init();
@@ -66,14 +76,14 @@ int main(void)
 	volatile static int i = 0;
 	while( 1 ){
 #if (I2C_DEMO_MODE==I2C_DEMO_MODE_HEX)
-		disp_show_hex( i );
+		disp_show_hex( random_get() );
 		i++;
 		delay(100000);
 #endif
 #if (I2C_DEMO_MODE==I2C_DEMO_MODE_DECIMAL)
-		disp_show_decimal( i );
+		disp_show_decimal( random_get() % 11 );
 		i++;
-		delay(100000);
+		delay(1000000);
 #endif
 #if (I2C_DEMO_MODE==I2C_DEMO_MODE_MSG)
 		if ( i < 5 ){
