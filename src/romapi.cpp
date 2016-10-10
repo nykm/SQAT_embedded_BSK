@@ -5,11 +5,14 @@
  *      Author: timppa
  */
 
-#define IAP_LOCATION (0x1FFF1FF1)
+#include "romapi.h"
 
-unsigned int command_param[5];
-unsigned int command_result[5];
+static unsigned int command_param[5];
+static unsigned int command_result[5];
 
+//
+// type definition for subroutine entry
+//
 typedef int (iap_call_t)(unsigned int[],unsigned int[]);
 
 int romapi_read_id(unsigned int* romid,int length)
@@ -24,7 +27,7 @@ int romapi_read_id(unsigned int* romid,int length)
 		command_param[rc]=0;
 		command_result[rc]=0;
 	}
-	command_param[0]=58;
+	command_param[0] = ROM_IAP_GET_ID;
 
 	rc = (entry)(command_param,command_result);
 	if ( rc!=0 ){
