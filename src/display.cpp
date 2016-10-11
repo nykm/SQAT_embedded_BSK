@@ -101,51 +101,61 @@ int disp_on(int alloff)
 	return rc;
 }
 
-static void rotate_message_left()
-{
-	char left = disp_msg_data[1];
-	disp_msg_data[1] = disp_msg_data[3];
-	disp_msg_data[3] = disp_msg_data[7];
-	disp_msg_data[7] = disp_msg_data[9];
-	disp_msg_data[9] = left;
-}
+/************************************************************************
+ *
+ *   IMPLEMENTATION BELOW
+ *
+ ************************************************************************/
 
 //
-// display message of:
-//   - DISP_MSG_DOWN
-//   - DISP_MSG_SAME
-//   - DISP_MSG_UP
-// if message is same as previous then rotate left
+// 0 (zero) is 1+2+4+8+16+32 = 63
+#define SEGMENTS_0 63
+// 1 (one)  is 2+4 = 6
+#define SEGMENTS_1 6
+
 //
-int disp_show_message(display_message_t message)
-{
-	const int addr = HW_I2C_ADDR_HT16K33;
-	if ( message<=DISP_MSG_FIRST || message>=DISP_MSG_LAST ){
-		return DISP_ERR_ILLEGAL;
-	}
-	if ( message != disp_last_message ){
-		if ( message==DISP_MSG_UP ){
-			disp_msg_data[1]=SEGMENTS_NONE;
-			disp_msg_data[3]=SEGMENTS_NONE;
-			disp_msg_data[7]=SEGMENTS_u;
-			disp_msg_data[9]=SEGMENTS_P;
-		} else if ( message==DISP_MSG_DOWN ){
-			disp_msg_data[1]=SEGMENTS_d;
-			disp_msg_data[3]=SEGMENTS_o;
-			disp_msg_data[7]=SEGMENTS_w;
-			disp_msg_data[9]=SEGMENTS_n;
-		} else if ( message==DISP_MSG_SAME ){
-			disp_msg_data[1]=SEGMENTS_S;
-			disp_msg_data[3]=SEGMENTS_A;
-			disp_msg_data[7]=SEGMENTS_m;
-			disp_msg_data[9]=SEGMENTS_E;
-		}
-	} else {
-		rotate_message_left( );
-	}
-	disp_last_message = message;
-	return i2c_write( addr, disp_msg_data,10 );
-}
+// number segments are displayed with combination
+// of following values:
+//
+//   1 1 1
+// 32     2
+// 32     2
+// 32     2
+//   64 64
+// 16     4
+// 16     4
+// 16     4
+//   8 8 8
+//
+//
+// define these (correctly), now the all display as "-"
+//
+/*
+ * TODO: Oscar, UNCOMMENT THESE
+ */
+//#define SEGMENTS_2 64
+//#define SEGMENTS_3 64
+//#define SEGMENTS_4 64
+//#define SEGMENTS_5 64
+//#define SEGMENTS_6 64
+//#define SEGMENTS_7 64
+//#define SEGMENTS_8 64
+//#define SEGMENTS_9 64
+
+/*
+ * TODO: Oscar, REMOVE THESE
+ */
+#define SEGMENTS_2 0x5B
+#define SEGMENTS_3 0x4F
+#define SEGMENTS_4 0x66
+#define SEGMENTS_5 0x6D
+#define SEGMENTS_6 0x7D
+#define SEGMENTS_7 0x07
+#define SEGMENTS_8 0x7F
+#define SEGMENTS_9 0x6F
+/*
+ * TODO: Oscar, UNTIL HERE
+ */
 
 //
 // mapping of number to its segment data:
@@ -165,7 +175,6 @@ const char digit_segments[10]={
 		SEGMENTS_9,
 };
 
-#if 1
 //
 // return the Nth rightmost digit from value
 //   value | n | result
@@ -177,16 +186,29 @@ const char digit_segments[10]={
 //
 int disp_digit_of(int value,unsigned int n)
 {
+	/*
+	 * TODO: Oscar, REMOVE THIS
+	 */
 	while( n && value ){
 		n--;
 		value /= 10;
 	}
 	return value % 10;
+	/*
+	 * TODO: Oscar, UNTIL HERE
+	 */
 }
-
+//
+// map decimal numbers of "value" to digits in the
+// 7-segment display: calculate what segments to
+// show on each position so that "value" is displayed
+//
 int disp_show_decimal(int value)
 {
 	const int addr = HW_I2C_ADDR_HT16K33;
+	/*
+	 * TODO: Oscar, REMOVE THIS
+	 */
 	if ( value > 9999 ){
 		return DISP_ERR_OVERFLOW;
 	} else if ( value < 0 ){
@@ -206,92 +228,8 @@ int disp_show_decimal(int value)
 			}
 		}
 	}
+	/*
+	 * TODO: Oscar, UNTIL HERE
+	 */
 	return i2c_write( addr,disp_msg_data,10 );
-}
-
-#else
-int disp_show_decimal(int value)
-{
-	const int addr = HW_I2C_ADDR_HT16K33;
-	int rc=0;
-	int i;
-	int sign = 0;
-
-	if ( value < 0 ){
-		sign = -1;
-		value = -value;
-	}
-
-	for( i=0; i<4; i++){
-		int num = value % 10;
-		int idx = 3-i;
-		if ( idx>1 ){
-			idx++;
-		}
-		disp_msg_data[idx*2+1] = digit_segments[num];
-		value = value / 10;
-	}
-	// leading zeroes are shut off, except last
-	if ( disp_msg_data[1]==SEGMENTS_0 ){
-		disp_msg_data[1] = SEGMENTS_NONE;
-		if ( disp_msg_data[3]==SEGMENTS_0 ){
-			disp_msg_data[3]=SEGMENTS_NONE;
-			if ( disp_msg_data[7]==SEGMENTS_0 ){
-				disp_msg_data[7] = SEGMENTS_NONE;
-			}
-		}
-	}
-	if ( sign ){
-		disp_msg_data[1]=SEGMENTS_MINUS;
-	}
-	rc = i2c_write( addr,disp_msg_data,10 );
-	return rc;
-}
-#endif
-
-const char digit_hex_segments[16]={
-		SEGMENTS_0,
-		SEGMENTS_1,
-		SEGMENTS_2,
-		SEGMENTS_3,
-		SEGMENTS_4,
-		SEGMENTS_5,
-		SEGMENTS_6,
-		SEGMENTS_7,
-		SEGMENTS_8,
-		SEGMENTS_9,
-		SEGMENTS_A,
-		SEGMENTS_B,
-		SEGMENTS_C,
-		SEGMENTS_D,
-		SEGMENTS_E,
-		SEGMENTS_F,
-};
-
-int disp_show_hex(int value)
-{
-	const int addr = HW_I2C_ADDR_HT16K33;
-	int rc=0;
-	int i;
-
-	for( i=0; i<4; i++){
-		int num = value & 0x0F;
-		int idx = 3-i;
-		if ( idx>1 ){
-			idx++;
-		}
-		disp_msg_data[idx*2+1] = digit_hex_segments[num];
-		value = value >> 4;
-	}
-	if ( disp_msg_data[1]==SEGMENTS_0 ){
-		disp_msg_data[1] = SEGMENTS_NONE;
-		if ( disp_msg_data[3]==SEGMENTS_0 ){
-			disp_msg_data[3]=SEGMENTS_NONE;
-			if ( disp_msg_data[7]==SEGMENTS_0 ){
-				disp_msg_data[7] = SEGMENTS_NONE;
-			}
-		}
-	}
-	rc = i2c_write( addr,disp_msg_data,10 );
-	return rc;
 }

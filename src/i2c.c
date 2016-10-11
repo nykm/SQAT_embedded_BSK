@@ -88,17 +88,67 @@ int i2c_read_p( i2c_data_t* data )
 	return count;
 }
 
+#define SIMULATED_DATA 30
+
+static int index_simulation = 0;
+
+static const char simulated[SIMULATED_DATA]={
+		9,0,		// round #1
+		9,1,
+		10,0,		// round #3
+		2,0,
+		3,3,		// round #5
+		11,0,		// incorrect 11 is too high
+		2,0,		// round #6
+		5,1,
+		3,0,		// round #8
+		2,9,		// incorrect 2+9 == 11
+		0,10,
+		6,3,		// round #10
+
+		10,0,		// round #1 for game #2
+		9,1,
+		5,5,
+};
+
+void reset_simulation()
+{
+	index_simulation = 0;
+}
+
+static int get_simulated_data()
+{
+	int out = simulated[ index_simulation++ ];
+	if ( index_simulation==SIMULATED_DATA ){
+		index_simulation = 0;
+	}
+	return out;
+}
+
 int i2c_read(int address,
 		char* reg,int reglen,
 		char* buffer,int length)
 {
-	i2c_data_t i2c_data;
-	i2c_data.address=address;
-	i2c_data.reg=reg;
-	i2c_data.reglen =reglen;
-	i2c_data.buffer = buffer;
-	i2c_data.length = length;
-	return i2c_read_p( &i2c_data );
+	if ( address==0x70 ){
+		i2c_data_t i2c_data;
+		i2c_data.address=address;
+		i2c_data.reg=reg;
+		i2c_data.reglen =reglen;
+		i2c_data.buffer = buffer;
+		i2c_data.length = length;
+		return i2c_read_p( &i2c_data );
+	} else if ( address==0x90 ){ // BSK input
+		// should always read ONE character at a time
+		if ( buffer && length==1 ){
+			int i=0;
+			for(i=0; i<length; i++){
+				char d = get_simulated_data();
+				buffer[i]=d;
+			}
+			return length;
+		}
+	}
+	return I2C_ERR_READ_RX;
 }
 
 static int i2c_write_p(i2c_data_t* data)
@@ -139,11 +189,15 @@ static int i2c_write_p(i2c_data_t* data)
 
 int i2c_write(int address,const char* buffer,int length)
 {
-	i2c_data_t i2c_data;
-	i2c_data.address = address;
-	i2c_data.reg = 0;
-	i2c_data.reglen = 0;
-	i2c_data.buffer = (char*)buffer;
-	i2c_data.length = length;
-	return i2c_write_p( &i2c_data );
+	if ( address==0x70 ){
+		i2c_data_t i2c_data;
+		i2c_data.address = address;
+		i2c_data.reg = 0;
+		i2c_data.reglen = 0;
+		i2c_data.buffer = (char*)buffer;
+		i2c_data.length = length;
+		return i2c_write_p( &i2c_data );
+	} else {
+		return -1;
+	}
 }

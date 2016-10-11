@@ -11,6 +11,8 @@
 //
 // I2C device addresses
 //
-#define HW_I2C_ADDR_HT16K33        0x70
+#define HW_I2C_ADDR_HT16K33  0x70
+
+#define HW_BSK_PIN_COUNTER   0x90
 
 #endif /* HARDWARE_H_ */

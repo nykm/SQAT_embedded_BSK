@@ -29,17 +29,6 @@ void disp_reset(int alloff);
 
 int disp_digit_of(int value,unsigned int n);
 int disp_show_decimal( int value );
-int disp_show_hex( int value );
-
-typedef enum display_message_e {
-	DISP_MSG_FIRST=0,
-	DISP_MSG_DOWN,
-	DISP_MSG_SAME,
-	DISP_MSG_UP,
-	DISP_MSG_LAST
-} display_message_t;
-
-int disp_show_message( display_message_t message );
 
 #ifdef __cplusplus
 }

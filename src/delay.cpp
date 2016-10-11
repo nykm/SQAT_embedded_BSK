@@ -18,8 +18,8 @@ void delay(volatile int d)
 	while( --d );
 }
 
-#define DELAY_0_4113 1120000
-#define DELAY_1_0    2724631
+#define DELAY_1_0 1120000
+//#define DELAY_1_0    2724631
 
 void delay_1s()
 {
