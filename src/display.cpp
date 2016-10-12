@@ -6,11 +6,8 @@
  */
 
 #include "i2c.h"
-
 #include "hardware.h"
-
 #include "ht16k33.h"
-
 #include "display.h"
 
 int disp_off()
@@ -130,32 +127,15 @@ int disp_on(int alloff)
 //
 // define these (correctly), now the all display as "-"
 //
-/*
- * TODO: Oscar, UNCOMMENT THESE
- */
-//#define SEGMENTS_2 64
-//#define SEGMENTS_3 64
-//#define SEGMENTS_4 64
-//#define SEGMENTS_5 64
-//#define SEGMENTS_6 64
-//#define SEGMENTS_7 64
-//#define SEGMENTS_8 64
-//#define SEGMENTS_9 64
 
-/*
- * TODO: Oscar, REMOVE THESE
- */
-#define SEGMENTS_2 0x5B
-#define SEGMENTS_3 0x4F
-#define SEGMENTS_4 0x66
-#define SEGMENTS_5 0x6D
-#define SEGMENTS_6 0x7D
-#define SEGMENTS_7 0x07
-#define SEGMENTS_8 0x7F
-#define SEGMENTS_9 0x6F
-/*
- * TODO: Oscar, UNTIL HERE
- */
+#define SEGMENTS_2 64
+#define SEGMENTS_3 64
+#define SEGMENTS_4 64
+#define SEGMENTS_5 64
+#define SEGMENTS_6 64
+#define SEGMENTS_7 64
+#define SEGMENTS_8 64
+#define SEGMENTS_9 64
 
 //
 // mapping of number to its segment data:
@@ -186,18 +166,10 @@ const char digit_segments[10]={
 //
 int disp_digit_of(int value,unsigned int n)
 {
-	/*
-	 * TODO: Oscar, REMOVE THIS
-	 */
-	while( n && value ){
-		n--;
-		value /= 10;
-	}
-	return value % 10;
-	/*
-	 * TODO: Oscar, UNTIL HERE
-	 */
+	return -1;
 }
+
+
 //
 // map decimal numbers of "value" to digits in the
 // 7-segment display: calculate what segments to
@@ -206,30 +178,6 @@ int disp_digit_of(int value,unsigned int n)
 int disp_show_decimal(int value)
 {
 	const int addr = HW_I2C_ADDR_HT16K33;
-	/*
-	 * TODO: Oscar, REMOVE THIS
-	 */
-	if ( value > 9999 ){
-		return DISP_ERR_OVERFLOW;
-	} else if ( value < 0 ){
-		return DISP_ERR_UNDERFLOW;
-	}
-	disp_msg_data[1] = digit_segments[ disp_digit_of( value, 3 ) ];
-	disp_msg_data[3] = digit_segments[ disp_digit_of( value, 2 ) ];
-	disp_msg_data[5] = SEGMENTS_NONE;
-	disp_msg_data[7] = digit_segments[ disp_digit_of( value, 1 ) ];
-	disp_msg_data[9] = digit_segments[ disp_digit_of( value, 0 ) ];
-	if ( disp_msg_data[1]==0x3F ){
-		disp_msg_data[1] = 0x00;
-		if ( disp_msg_data[3]==0x3F ){
-			disp_msg_data[3]=0x00;
-			if ( disp_msg_data[7]==0x3F ){
-				disp_msg_data[7] = 0x00;
-			}
-		}
-	}
-	/*
-	 * TODO: Oscar, UNTIL HERE
-	 */
+
 	return i2c_write( addr,disp_msg_data,10 );
 }

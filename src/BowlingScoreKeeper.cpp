@@ -22,22 +22,23 @@
 #include "delay.h"
 #include "display.h"
 #include "i2c.h"
-
 #include "bsk.h"
 
 int main(void)
 {
 #if defined (__USE_LPCOPEN)
-    // Read clock settings and update SystemCoreClock variable
     SystemCoreClockUpdate();
 #endif
 
-	// TODO: add call to swm_config_LED();
+    // Configuration of SWM and I2C
     swm_config_i2c();
     i2c_reset();
 
+    // Display setup
 	disp_on( DISP_SHOW_NONE );
 	disp_reset( DISP_SHOW_NONE );
+
+	// Main loop -- you do not have to tocuh it
 	while( 1 ){
 		play_game();
 		delay_1s();

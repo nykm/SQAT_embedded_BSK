@@ -88,27 +88,25 @@ int i2c_read_p( i2c_data_t* data )
 	return count;
 }
 
-#define SIMULATED_DATA 30
+#define SIMULATED_DATA 25
 
 static int index_simulation = 0;
 
 static const char simulated[SIMULATED_DATA]={
 		9,0,		// round #1
 		9,1,
-		10,0,		// round #3
+		10,			// round #3
 		2,0,
 		3,3,		// round #5
-		11,0,		// incorrect 11 is too high
+		12,			// incorrect 12 is too high
 		2,0,		// round #6
 		5,1,
 		3,0,		// round #8
-		2,9,		// incorrect 2+9 == 11
-		0,10,
+		3,8,		// incorrect 3+8 == 11
+		4,5,
 		6,3,		// round #10
-
-		10,0,		// round #1 for game #2
-		9,1,
-		5,5,
+		0,12,		// incorrect 12 is too high
+		10			// round #1 for game #2
 };
 
 void reset_simulation()
