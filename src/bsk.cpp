@@ -30,18 +30,27 @@
 //
 int bsk_get_throw(bsk_frame_t* pFrame,int index)
 {
+	if (index < 1 || index > 2) {
+		return ERR_BAD_THROW_INDEX;
+	}
+
 	if ( 0==pFrame ){
 		return ERR_PARAM_NULL;
 	}
-	//
-	// reminder about pointers:
-	//
-	// pFrame->first_throw  gives the value of "first_throw"
-	//
-	// pFrame->first_throw = 2; set the value of "first_throw"
-	//
 
-	return ERR_BAD_THROW;
+	char data = 0;
+
+	if (i2c_read(0x90, (char*) 0, 0, &data, 1) != 1) {
+		return ERR_READ_FAILED;
+	}
+
+	if (index == 1) {
+		pFrame->first_throw = (int) data;
+	} else {
+		pFrame->second_throw = (int) data;
+	}
+
+	return 0;
 }
 
 //
@@ -52,9 +61,15 @@ int bsk_calculate(bsk_game_t* pGame,int frames)
 	if ( 0==pGame ){
 		return ERR_PARAM_NULL;
 	}
+
 	int sum=0;
 
-	return -1;
+	for (int i = 0; i < frames; i++) {
+		sum += pGame->frames[i].first_throw;
+		sum += pGame->frames[i].second_throw;
+	}
+
+	return sum;
 }
 
 //
@@ -70,7 +85,15 @@ int bsk_valid_frame(bsk_frame_t* pFrame)
 		return -1;
 	}
 
-	return -1;
+	if (pFrame->first_throw > 10 || pFrame->second_throw > 10) {
+		return 1;
+	}
+
+	if (pFrame->first_throw + pFrame->second_throw > 10) {
+		return 1;
+	}
+
+	return 0;
 }
 
 //
@@ -85,12 +108,40 @@ int play_game()
 	// use these variables if you wish; they are not compulsory
 	int sum=0;
 	bsk_game_t bsk_game;
-	int f=0;
 
-	//
+	// set initial scores
+	for (unsigned int i = 0; i < 10; i++) {
+		bsk_game.frames[i].first_throw = 0;
+		bsk_game.frames[i].second_throw = 0;
+	}
+
 	// show initial score (zero)
-	//
-	disp_show_decimal( sum );
+	disp_show_decimal(sum);
 
-	return -1;
+	// go through 10 frames and update throws
+	for (unsigned int f = 0; f < 10; f++) {
+		bsk_frame_t* frame = &bsk_game.frames[f];
+		int throw_index = 1;
+		// go through 2 throws: 1 & 2
+		while (throw_index <= 2) {
+			// get next valid frame
+			do {
+				// get throw value until valid value is gotten
+				while (bsk_get_throw(frame, throw_index) != 0);
+			} while (bsk_valid_frame(frame) != 0);
+
+			// no need for second throw so continue to next frame
+			if (frame->first_throw == 10) {
+				break;
+			}
+
+			++throw_index;
+		}
+
+		sum = bsk_calculate(&bsk_game, f + 1);
+		disp_show_decimal(sum);
+		delay_1s();
+	}
+
+	return 0;
 }

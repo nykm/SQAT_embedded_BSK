@@ -98,7 +98,7 @@ int disp_on(int alloff)
 	return rc;
 }
 
-/************************************************************************
+/*****************************************************pos*******************
  *
  *   IMPLEMENTATION BELOW
  *
@@ -128,14 +128,14 @@ int disp_on(int alloff)
 // define these (correctly), now the all display as "-"
 //
 
-#define SEGMENTS_2 64
-#define SEGMENTS_3 64
-#define SEGMENTS_4 64
-#define SEGMENTS_5 64
-#define SEGMENTS_6 64
-#define SEGMENTS_7 64
-#define SEGMENTS_8 64
-#define SEGMENTS_9 64
+#define SEGMENTS_2 91
+#define SEGMENTS_3 79
+#define SEGMENTS_4 102
+#define SEGMENTS_5 109
+#define SEGMENTS_6 125
+#define SEGMENTS_7 7
+#define SEGMENTS_8 127
+#define SEGMENTS_9 103
 
 //
 // mapping of number to its segment data:
@@ -155,6 +155,13 @@ const char digit_segments[10]={
 		SEGMENTS_9,
 };
 
+const int digit_locations[4]={
+		1,
+		3,
+		7,
+		9,
+};
+
 //
 // return the Nth rightmost digit from value
 //   value | n | result
@@ -166,7 +173,24 @@ const char digit_segments[10]={
 //
 int disp_digit_of(int value,unsigned int n)
 {
-	return -1;
+	if (n > 3) {
+		return -1;
+	}
+
+	int pos = n;
+
+	while(pos != 0 && value > 0) {
+		value /= 10;
+		if (value > 0) --pos;
+	}
+
+	if (pos == 0) {
+		int digit = value % 10;
+		disp_msg_data[digit_locations[3 - n]] = digit_segments[digit];
+
+	} else {
+		disp_msg_data[digit_locations[3 - n]] = 0;
+	}
 }
 
 
@@ -177,6 +201,10 @@ int disp_digit_of(int value,unsigned int n)
 //
 int disp_show_decimal(int value)
 {
+	for (unsigned int i = 0; i < 4; i++) {
+		disp_digit_of(value, i);
+	}
+
 	const int addr = HW_I2C_ADDR_HT16K33;
 
 	return i2c_write( addr,disp_msg_data,10 );
